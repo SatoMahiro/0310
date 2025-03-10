@@ -73,24 +73,16 @@ function startQuiz() {
   statsP.position(10, 50);
   statsP.style('font-size', '35px');
 
-  totalQuestions = questions.getRowCount() + fillInQuestions.length;
+  totalQuestions = questions.getRowCount();
   loadQuestion();
 }
 
 function loadQuestion() {
   if (currentQuestionIndex < totalQuestions) {
-    const isChoiceQuestion = currentQuestionIndex < questions.getRowCount();
-    const questionIndex = isChoiceQuestion ? currentQuestionIndex : currentQuestionIndex - questions.getRowCount();
-    const questionData = isChoiceQuestion ? questions.getRow(questionIndex) : fillInQuestions[questionIndex];
-
-    const question = isChoiceQuestion ? questionData.getString('題目') : questionData.question;
-    const options = isChoiceQuestion ? [
-      questionData.getString('選項1'),
-      questionData.getString('選項2'),
-      questionData.getString('選項3'),
-      questionData.getString('選項4')
-    ] : [];
-    correctAnswer = isChoiceQuestion ? questionData.getString('正確答案') : questionData.answer;
+    const questionData = questions.getRow(currentQuestionIndex);
+    const question = questionData.getString('題目');
+    const type = questionData.getString('類型');
+    correctAnswer = questionData.getString('正確答案');
 
     // 顯示題目
     if (questionP) questionP.remove();
@@ -98,22 +90,25 @@ function loadQuestion() {
     questionP.position(width / 2 - 90, height / 2 - 120);
     questionP.style('font-size', '30px');
 
-    // 移除之前的選項
+    // 移除之前的選項或輸入框
     if (optionsDiv) optionsDiv.remove();
     if (inputBox) inputBox.remove();
 
-    if (isChoiceQuestion) {
+    if (type === 'choice') {
       // 建立選擇題
       optionsDiv = createDiv();
       optionsDiv.position(width / 2 - 100, height / 2 - 50);
       optionsDiv.style('font-size', '30px');
 
       radio = createRadio(); //建立選擇題
-      options.forEach(option => radio.option(option)); //建立選項
+      radio.option(questionData.getString('選項1'));
+      radio.option(questionData.getString('選項2'));
+      radio.option(questionData.getString('選項3'));
+      radio.option(questionData.getString('選項4'));
       radio.parent(optionsDiv);  
       radio.style('width', 'auto'); 
       radio.style('display', 'inline-block');
-    } else {
+    } else if (type === 'fill') {
       // 建立填充題
       inputBox = createInput();
       inputBox.position(width / 2 - 50, height / 2 - 50);
@@ -125,7 +120,7 @@ function loadQuestion() {
     submitButton = createButton('送出');
     submitButton.position(width / 2 - 20, height / 2);
     submitButton.style('font-size', '30px');
-    submitButton.mousePressed(isChoiceQuestion ? checkAnswer : () => checkFillInAnswer(correctAnswer));
+    submitButton.mousePressed(type === 'choice' ? checkAnswer : () => checkFillInAnswer(correctAnswer));
 
     // 建立結果顯示區域
     if (resultP) resultP.remove();
